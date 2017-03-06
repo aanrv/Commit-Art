@@ -7,7 +7,7 @@ DAYS_IN_WEEK = 7
 
 # calculate the current origin's (0,0) date
 def calc_origin():
-	COLS = 54						# number of cols in commit history grid
+	COLS = 53						# number of cols in commit history grid
 
 	reference_origin = datetime.datetime(2016, 2, 28, 0, 0)	# a known past origin used as a reference to find current origin
 	now = datetime.datetime.today()
