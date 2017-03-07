@@ -4,6 +4,7 @@ import sys
 import os
 import datetime
 import subprocess
+import functools
 
 NUM_COLS = 53		# number of columns in GitHub's commit grid
 DAYS_IN_WEEK = 7	# self-explanatory; you should not even be reading this comment
@@ -70,15 +71,52 @@ def createGitDirectory(dirname):
 		os.makedirs(dirname)
 	else:
 		print("%s already exists." % (dirname))
-		return None
+		return False
 	try:
 		origWD = os.getcwd()			# save cwd
 		os.chdir(dirname)			# change to newly created dir
 		subprocess.call(["git", "init"])	# initialize git
 		os.chdir(origWD)			# change back to original wd
+		return True
 	except Exception as e:
 		print("Unable to `git init` directory: %s\n%s" % (dirname, str(e)))
-		return None
+		return False
+
+def createGitDate(date):
+	"""Creates a date string in a format accepted by Git"""
+	days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+	months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+	dayname = days[date.weekday()]
+	day = str(date.day)
+	month = months[date.month - 1]
+	time = str(date.time()).split('.')[0]
+	year = str(date.year)
+	
+	gitdate = "{} {} {} {} {}".format(dayname, month, day, time, year)
+	return gitdate
+
+def createCommits(clist, dirname):
+	""" Creates commits at points in `clist` in Git directory `dirname`.
+	Precondition: The points in clist are sorted by the dates they represent."""
+	origWD = os.getcwd()				# save curr dir
+	os.chdir(dirname)				# change to git dir
+	for point in clist:
+		pointdate = coordinateToDate(point)	# get date at point
+		gitDate = createGitDate(pointdate)	# get date string in git format
+		gitCommit(gitDate)				# create an empty commit at given date
+	subprocess.call(['git', 'branch', '-m', 'commit-art-dummy'])	# slight preemption against user accidentially pushing to wrong repo, master will not be affected
+	os.chdir(origWD)
+
+def gitCommit(date):
+	subprocess.call(['git', 'commit', '--allow-empty', '--date=\'{}\''.format(date), '-m', 'update history'])
+
+def cmpPoints(p1, p2):
+	p1x = p1[0]
+	p1y = p1[1]
+	p2x = p2[0]
+	p2y = p2[1]
+	return (p1x * 7 + p1y) - (p2x * 7 + p2y)
 
 def main():
 	# make sure args are provided
@@ -88,7 +126,7 @@ def main():
 
 	# retrieve coordinates from file
 	print("Retrieving coordinates from file: %s" % (sys.argv[1]))
-	clist = list(set(getCoordinates(sys.argv[1])))	# retrieve coordinates from file
+	clist = sorted(set(getCoordinates(sys.argv[1])), key=functools.cmp_to_key(cmpPoints))	# retrieve coordinates from file
 	print("\nRetrieved:")
 	print(clist)
 	print("")
@@ -96,6 +134,9 @@ def main():
 	# create and init git directory
 	if not createGitDirectory(sys.argv[2]):
 		sys.exit(1)
+
+	# create commits
+	createCommits(clist, sys.argv[2])
 	
 if __name__ == '__main__':
 	main()
