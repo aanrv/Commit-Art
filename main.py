@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os
@@ -6,18 +6,15 @@ import datetime
 import subprocess
 import functools
 
-NUM_COLS = 53		# number of columns in GitHub's commit grid
-DAYS_IN_WEEK = 7	# self-explanatory; you should not even be reading this comment
-BRANCH_NAME = "commit-art-dummy"
-REMOTE_NAME = "origin"
+NUM_COLS = 53				# number of columns in GitHub's commit grid
+DAYS_IN_WEEK = 7			# self-explanatory; you should not even be reading this comment
+BRANCH_NAME = "commit-art-dummy"	# name of git branch
+REMOTE_NAME = "origin"			# name of git remote
 
-def calcOrigin():
-	"""Calculates the date of the origin point (0,0) on GitHub's commit grid relative to today's date."""
-	referenceOrigin = datetime.datetime(2016, 2, 28, 0, 0)	# a known past origin used as a reference to find current origin
-	now = datetime.datetime.today()
-	
-	# perform super advanced quantum mathematical calculations
-	deltaDays = ((now - referenceOrigin).days % 7) + ((NUM_COLS - 1) * DAYS_IN_WEEK)
+def calcOrigin(now):
+	"""Calculates the date of the origin point (0,0) on GitHub's commit grid relative to `now`."""
+	daysAfterSunday = (now.weekday() + 1) % DAYS_IN_WEEK		# calculate days after sunday (GitHub's graph has Sundays at y=0)
+	deltaDays = daysAfterSunday + ((NUM_COLS - 1) * DAYS_IN_WEEK)	# calculates number of weeks (x)
 	origin = now - datetime.timedelta(days=deltaDays)
 	return origin
 
@@ -25,7 +22,7 @@ def coordinateToDate(xy):
 	"""Converts a coordinate tuple to a date."""
 	dweeks = xy[0]
 	ddays = xy[1]
-	origin = calcOrigin()
+	origin = calcOrigin(datetime.datetime.now())
 	return origin + datetime.timedelta(days=(dweeks * DAYS_IN_WEEK)) + datetime.timedelta(days=ddays)
 
 def getCoordinates(filename):
@@ -107,7 +104,9 @@ def createCommits(clist, dirname):
 		pointdate = coordinateToDate(point)	# get date at point
 		gitDate = createGitDate(pointdate)	# get date string in git format
 		gitCommit(gitDate)				# create an empty commit at given date
+	print("")
 	subprocess.call(['git', 'branch', '-m', BRANCH_NAME])	# slight preemption against user accidentially pushing to wrong repo, master will not be affected
+	print("")
 	os.chdir(origWD)
 
 def gitCommit(date):
@@ -129,6 +128,7 @@ def pushToRemote(gitdirname, remoteURL):
 
 	subprocess.call(['git', 'remote', 'add', REMOTE_NAME, remoteURL])
 	subprocess.call(['git', 'remote', '-v'])
+	print("")
 	subprocess.call(['git', 'push', REMOTE_NAME, BRANCH_NAME])
 	
 	os.chdir(origWD)
