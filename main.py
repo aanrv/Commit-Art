@@ -8,6 +8,8 @@ import functools
 
 NUM_COLS = 53		# number of columns in GitHub's commit grid
 DAYS_IN_WEEK = 7	# self-explanatory; you should not even be reading this comment
+BRANCH_NAME = "commit-art-dummy"
+REMOTE_NAME = "origin"
 
 def calcOrigin():
 	"""Calculates the date of the origin point (0,0) on GitHub's commit grid relative to today's date."""
@@ -105,38 +107,58 @@ def createCommits(clist, dirname):
 		pointdate = coordinateToDate(point)	# get date at point
 		gitDate = createGitDate(pointdate)	# get date string in git format
 		gitCommit(gitDate)				# create an empty commit at given date
-	subprocess.call(['git', 'branch', '-m', 'commit-art-dummy'])	# slight preemption against user accidentially pushing to wrong repo, master will not be affected
+	subprocess.call(['git', 'branch', '-m', BRANCH_NAME])	# slight preemption against user accidentially pushing to wrong repo, master will not be affected
 	os.chdir(origWD)
 
 def gitCommit(date):
+	"""Commits in CWD at given date."""
 	subprocess.call(['git', 'commit', '--allow-empty', '--date=\'{}\''.format(date), '-m', 'update history'])
 
 def cmpPoints(p1, p2):
+	"""A compare function to compare points without having to convert to datetime objects.
+	Uses less space and performs fewer calculations."""
 	p1x = p1[0]
 	p1y = p1[1]
 	p2x = p2[0]
 	p2y = p2[1]
 	return (p1x * 7 + p1y) - (p2x * 7 + p2y)
 
+def pushToRemote(gitdirname, remoteURL):
+	origWD = os.getcwd()
+	os.chdir(gitdirname)
+
+	subprocess.call(['git', 'remote', 'add', REMOTE_NAME, remoteURL])
+	subprocess.call(['git', 'remote', '-v'])
+	subprocess.call(['git', 'push', REMOTE_NAME, BRANCH_NAME])
+	
+	os.chdir(origWD)
+
 def main():
 	# make sure args are provided
-	if (len(sys.argv) != 3):
-		print("Usage: %s coordinatesFile newDirectoryName" % (sys.argv[0]))
+	if (not (len(sys.argv) >= 3 and len(sys.argv) <= 4)):
+		print("Usage: %s coordinatesFile newDirectoryName [remoteURL]" % (sys.argv[0]))
 		sys.exit(1)
 
 	# retrieve coordinates from file
-	print("Retrieving coordinates from file: %s" % (sys.argv[1]))
+	filename = sys.argv[1]
+	print("Retrieving coordinates from file: %s" % (filename))
 	clist = sorted(set(getCoordinates(sys.argv[1])), key=functools.cmp_to_key(cmpPoints))	# retrieve coordinates from file
 	print("\nRetrieved:")
 	print(clist)
 	print("")
 
 	# create and init git directory
-	if not createGitDirectory(sys.argv[2]):
+	gitdirname = sys.argv[2]
+	if (not createGitDirectory(gitdirname)):
 		sys.exit(1)
 
 	# create commits
-	createCommits(clist, sys.argv[2])
+	createCommits(clist, gitdirname)
+
+	# if extra arg provided, push directory to remote
+	if (len(sys.argv) == 4):
+		remote = sys.argv[3]
+		pushToRemote(gitdirname, remote)
 	
 if __name__ == '__main__':
 	main()
