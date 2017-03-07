@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# gittools contains functions that deal with Git.
+# gittools contains functions and variables that deal with Git.
 
 import os
 import sys

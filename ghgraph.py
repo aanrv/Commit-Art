@@ -22,6 +22,7 @@ def coordinateToDate(xy):
 	return origin + datetime.timedelta(days=(dweeks * DAYS_IN_WEEK)) + datetime.timedelta(days=ddays)
 
 def validCoordinate(xy):
+	"""Determines whether point is within bounds."""
 	x = xy[0]
 	y = xy[1]
 	return (x >= 0 and y >= 0 and x < NUM_COLS and y < DAYS_IN_WEEK)
