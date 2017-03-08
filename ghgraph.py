@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# ghgraph contains functions and variables that have to do with GitHub's commit graph.
+# Contains functions and variables that deal with GitHub's commit graph.
 
 import datetime
 
