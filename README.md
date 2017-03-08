@@ -32,9 +32,9 @@ Note that only the author date is changed, not the committer date. As far as I k
    3,3
    4,4
    ```
-   The format is `x,y` separated by newlines. `0,0` is the earliest date (top leftmost point) on the commit graph.
-2. Create an empty repository on GitHub (preferrably on an account with no other repositories with commits).
+   The format is `x,y` separated by newlines. `0,0` is the earliest date (the top leftmost point) on the commit graph.
+2. Create an empty repository on GitHub (preferably on an account with no other repositories with commits).
 3. Run the script as shown in above.
-4. Optional: If `repoURL` was not provided, manually push the directory to the GitHub repository you created in step 2.
+4. Optional: If `repoURL` was not provided, manually push the directory to the GitHub repository you created in Step 2.
 
 
